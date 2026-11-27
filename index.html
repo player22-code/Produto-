@@ -170,10 +170,10 @@ body.nh-cinema-zoom #nh-cinema-hit{display:none!important}
 @media(prefers-reduced-motion:reduce){#nh-cinema-frame{transition:none}}
 </style>
 <script id="nh-cinematic-integration">
-(()=>{const f=document.createElement('iframe');f.id='nh-cinema-frame';f.title='Cenário 3D cinematográfico interativo';f.src='cinema-3d.html?embed=1&v=20261127-perf2';f.tabIndex=-1;const hit=document.createElement('button');hit.id='nh-cinema-hit';hit.type='button';hit.setAttribute('aria-label','Ampliar celular 3D e visualizar código');document.body.prepend(f);document.body.append(hit);
-const groups=[0,0,0,1,2,2,2,3,3,3,4,4,4];let ready=false,raf=0,last=0,previousFocus=null;
+(()=>{const f=document.createElement('iframe');f.id='nh-cinema-frame';f.title='Cenário 3D cinematográfico interativo';f.src='cinema-3d.html?embed=1&v=20261127-flow3';f.tabIndex=-1;const hit=document.createElement('button');hit.id='nh-cinema-hit';hit.type='button';hit.setAttribute('aria-label','Ampliar celular 3D e visualizar código');document.body.prepend(f);document.body.append(hit);
+const groups=[0,0,0,1,2,2,2,3,3,3,4,4,4];let ready=false,raf=0,last=0,previousFocus=null,layoutDirty=true,metrics=[],lastScene=-1,lastQty=-1,lastHit='';
 const api=()=>{try{return f.contentWindow?.nhCinema}catch{return null}};
-function sourceSlides(){return [...document.querySelectorAll('#allSlides .scroll-slide')]}
+function sourceSlides(){return [...document.querySelectorAll('#allSlides .scroll-slide')]}function measure(){metrics=sourceSlides().map(el=>{const r=el.getBoundingClientRect();return{top:r.top+scrollY,bottom:r.bottom+scrollY}});layoutDirty=false}const invalidate=()=>{layoutDirty=true};addEventListener('resize',invalidate,{passive:true});document.fonts?.ready.then(invalidate);if(window.ResizeObserver){const ro=new ResizeObserver(invalidate);const root=document.getElementById('allSlides');if(root)ro.observe(root);sourceSlides().forEach(el=>ro.observe(el));}
 function open(){const a=api();if(!a)return;previousFocus=document.activeElement;if(a.open()){f.focus({preventScroll:true})}}
 hit.addEventListener('click',open);const s3=document.getElementById('slide-3')?.querySelector('.content');if(s3){const b=document.createElement('button');b.id='nh-cinema-code-button';b.type='button';b.textContent='Ver código no celular 3D ↗';b.addEventListener('click',open);s3.append(b)}
 function enable(){if(ready||!api())return;ready=true;document.body.classList.add('nh-cinematic');requestAnimationFrame(tick)}
@@ -182,12 +182,12 @@ window.addEventListener('nhCinemaOpen',()=>{document.body.classList.add('nh-cine
 window.addEventListener('nhCinemaClose',()=>{document.body.classList.remove('nh-cinema-zoom');f.tabIndex=-1;if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});previousFocus=null});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&api()?.zoomed)api().close()});
 window.addEventListener('pointermove',e=>{if(ready&&!api()?.zoomed)api()?.pointer(e.clientX/Math.max(1,innerWidth),e.clientY/Math.max(1,innerHeight))},{passive:true});
-function tick(t){raf=requestAnimationFrame(tick);if(t-last<48)return;last=t;const a=api();if(!a)return;const suspend=document.hidden||document.body.classList.contains('finale-playing');a.pause?.(suspend);if(suspend)return;const ss=sourceSlides();if(!ss.length)return;
-const y=innerHeight*.5;let ix=ss.findIndex(el=>el.getBoundingClientRect().bottom>y);if(ix<0)ix=ss.length-1;
-let v=groups[ix]??4;const blend=Math.max(90,innerHeight*.22);const cur=ss[ix].getBoundingClientRect(),before=groups[ix-1],after=groups[ix+1];
+function tick(t){raf=requestAnimationFrame(tick);if(t-last<24)return;last=t;const a=api();if(!a)return;const suspend=document.hidden||document.body.classList.contains('finale-playing');a.pause?.(suspend);if(suspend)return;if(layoutDirty)measure();const ss=metrics;if(!ss.length)return;
+const y=scrollY+innerHeight*.5;let ix=ss.findIndex(el=>el.bottom>y);if(ix<0)ix=ss.length-1;
+let v=groups[ix]??4;const blend=Math.max(90,innerHeight*.22);const cur=ss[ix],before=groups[ix-1],after=groups[ix+1];
 if(ix>0&&before!==v&&cur.top>y-blend){let u=Math.max(0,Math.min(1,(y-cur.top+blend)/(2*blend)));v=before+(v-before)*u}
 else if(ix<ss.length-1&&after!==v&&cur.bottom<y+blend){let u=Math.max(0,Math.min(1,(y-cur.bottom+blend)/(2*blend)));v=v+(after-v)*u}
-a.setScene(v,Number(document.getElementById('qty')?.value||0));const b=ix===3&&!a.zoomed?a.bounds():null;if(b&&b.w>12&&b.h>12){Object.assign(hit.style,{display:'block',left:Math.max(0,b.x)+'px',top:Math.max(0,b.y)+'px',width:Math.min(b.w,innerWidth-Math.max(0,b.x))+'px',height:Math.min(b.h,innerHeight-Math.max(0,b.y))+'px'});}else hit.style.display='none'}
+const qty=Number(document.getElementById('qty')?.value||0);if(Math.abs(v-lastScene)>.001||qty!==lastQty){a.setScene(v,qty);if(!a.zoomed){lastScene=v;lastQty=qty}}const b=ix===3&&!a.zoomed?a.bounds():null;if(b&&b.w>12&&b.h>12){const x=Math.max(0,b.x),y=Math.max(0,b.y),box=[Math.round(x),Math.round(y),Math.round(Math.max(0,Math.min(b.w,innerWidth-x))),Math.round(Math.max(0,Math.min(b.h,innerHeight-y)))];const key=box.join(',');if(key!==lastHit){lastHit=key;Object.assign(hit.style,{display:'block',left:box[0]+'px',top:box[1]+'px',width:box[2]+'px',height:box[3]+'px'})}}else if(lastHit){lastHit='';hit.style.display='none'}}
 })();
 </script><style id="nh-cookie-cinematic">
 body.nh-cinematic #petToggle{position:relative!important;border-radius:50%!important;background:radial-gradient(ellipse at 50% 78%,#9d54d149,transparent 62%)!important}
