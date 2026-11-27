@@ -7,7 +7,7 @@ const colors={fur:[.79,.52,.31],ear:[.48,.23,.16],cream:[1,.85,.65],dark:[.055,.
 function render(ctx,a,opt={}){
 const {w,h,s,dogX,dogY,t}=a,assistant=!!opt.assistant,phase=a.phase||"idle",talking=!!opt.talking;
 const polys=[],cam=9;let origin=[dogX,dogY,0],yaw=assistant?Math.sin(t*.65)*.16:(a.yaw||0);
-function project(p){const q=cam/(cam-p[2]/s);return [w/2+(p[0]-w/2)*q,h/2+(p[1]-h/2)*q,p[2]]}
+function project(p){const q=cam/(cam-p[2]/s);const cx=a.cameraX??w/2,cy=a.cameraY??h/2;return [cx+(p[0]-cx)*q,cy+(p[1]-cy)*q,p[2]]}
 function part(center,scale,color,angle=0,axis=null,world=false,detail=true){const obj=detail?sphere:small,basis=axis?(()=>{let y=norm(axis),x=norm(cross(Math.abs(y[2])>.9?[1,0,0]:[0,0,1],y)),z=norm(cross(x,y));return[x,y,z]})():null;
 const transform=(p,normal=false)=>{let q=p.map((x,i)=>x*(normal?1/scale[i]:scale[i]));if(basis)q=add(add(mul(basis[0],q[0]),mul(basis[1],q[1])),mul(basis[2],q[2]));else if(angle)q=[q[0]*Math.cos(angle)-q[1]*Math.sin(angle),q[0]*Math.sin(angle)+q[1]*Math.cos(angle),q[2]];if(!normal)q=add(q,center);if(!world)q=rot(q,yaw);return normal?norm(q):world?q:add(origin,mul(q,s))};
 const pp=obj.p.map(p=>project(transform(p))),nn=obj.p.map(p=>transform(p,true));
@@ -15,10 +15,10 @@ for(const f of obj.f){const A=pp[f[0]],B=pp[f[1]],C=pp[f[2]];if(Math.abs((B[0]-A
 function ball(p,sc,c,ang=0,d=true){part(p,sc,colors[c]||c,ang,null,false,d)}
 function limb(a,b,c,r=.09,world=false){let d=sub(b,a),l=Math.hypot(...d);if(l<.001)return;part(mul(add(a,b),.5),[r,l*.58,r],colors[c]||c,0,d,world,false)}
 const local=p=>mul(rot(mul(sub(p,origin),1/s),-yaw),1);const world=p=>add(origin,mul(rot(p,yaw),s));
-if(!assistant){const shadow=ctx.createRadialGradient(dogX,a.floor,0,dogX,a.floor,s*.72);shadow.addColorStop(0,"#08041088");shadow.addColorStop(1,"#08041000");ctx.save();ctx.translate(dogX,a.floor);ctx.scale(1,.17);ctx.translate(-dogX,-a.floor);ctx.fillStyle=shadow;ctx.fillRect(dogX-s,a.floor-s,s*2,s*2);ctx.restore();
+if(!assistant){ctx.save();ctx.globalAlpha=a.shadowAlpha??1;const shadow=ctx.createRadialGradient(dogX,a.floor,0,dogX,a.floor,s*.72);shadow.addColorStop(0,"#08041088");shadow.addColorStop(1,"#08041000");ctx.save();ctx.translate(dogX,a.floor);ctx.scale(1,.17);ctx.translate(-dogX,-a.floor);ctx.fillStyle=shadow;ctx.fillRect(dogX-s,a.floor-s,s*2,s*2);ctx.restore();ctx.restore();
 if(a.ladderVisible){const L=a.ladder, rail=a.rail, H=a.floor-a.top;const lp=(x,y,z)=>[L.x+x*Math.cos(L.angle)-y*Math.sin(L.angle),L.y+x*Math.sin(L.angle)+y*Math.cos(L.angle),z];for(const x of [-rail,rail]){limb(lp(x,-H,0),lp(x,0,0),"metal",s*.044,true);part(lp(x,-s*.025,0),[s*.061,s*.047,s*.055],colors.rubber,0,null,true,false)}for(let j=0;j<a.n;j++){const yy=-a.gap*(j+.75);limb(lp(-rail,yy,0),lp(rail,yy,0),"gold",s*.027,true)}}
 if(a.ropeY>2){let last=[a.x,a.pull,0];for(let j=1;j<=12;j++){const u=j/12,p=[mix(a.x,a.ropeX,u)+Math.sin(pi*u)*s*.035,a.pull+(a.ropeY-a.pull-s*.09)*u,0];limb(last,p,"gold",s*.022,true);last=p}for(let j=0;j<16;j++){let b=j*pi/8,c=(j+1)*pi/8;limb([a.ropeX+Math.cos(b)*s*.10,a.ropeY+Math.sin(b)*s*.10,0],[a.ropeX+Math.cos(c)*s*.10,a.ropeY+Math.sin(c)*s*.10,0],"gold",s*.022,true)}}}
-const gait=Math.sin((a.walk||0)*2*pi),moving=phase==="walk"||phase==="carry",breathe=assistant?Math.sin(t*2)*.012:0;
+const gait=Math.sin((a.walk||0)*2*pi),moving=phase==="walk"||phase==="carry",breathe=(assistant||phase==='idle')?Math.sin(t*2)*.012:0;
 let feet=[[-.18,.32,.07],[.18,.32,.07]],hands=[[-.37,-.08,.11],[.37,-.08,.11]];
 if(moving){feet[0]=[-.18,.32-Math.max(0,gait)*.12,gait*.15];feet[1]=[.18,.32-Math.max(0,-gait)*.12,-gait*.15];hands[0][2]=-.12*gait;hands[1][2]=.12*gait}
 if(a.handTargets)for(let i=0;i<2;i++)if(a.handTargets[i])hands[i]=local(a.handTargets[i]);
@@ -39,8 +39,8 @@ polys.sort((a,b)=>a.z-b.z);for(const p of polys){ctx.beginPath();ctx.moveTo(p.A[
 }
 function mixPoint(a,b,t,d=[0,0,0]){return a.map((x,i)=>mix(x,b[i],t)+d[i])}
 const duration=16.8;
-function pose(w,h,t){t=Math.max(0,Math.min(duration,t));const s=Math.min(152,Math.max(45,Math.min(w*.23,h*.18))),floor=h-Math.max(25,s*.26),x=w*.58,top=Math.max(38,h*.17),rail=s*.28,n=Math.max(5,Math.min(10,Math.round((floor-top)/(s*.41)))),H=floor-top,gap=H/(n+.4),ringY=top+s*.12;
-let dogX=w-s*.85,dogY=floor-s*.39,phase="idle",yaw=-.25,walk=0,ladderVisible=false,ladder={x:w+s,y:floor,angle:pi*.44},ropeY=ringY*ease(t/.9),ropeX=x,pull=0,handTargets=null,footTargets=null;
+function pose(w,h,t,start=null){t=Math.max(0,Math.min(duration,t));const s=Math.min(152,Math.max(45,Math.min(w*.23,h*.18))),floor=h-Math.max(25,s*.26),x=w*.58,top=Math.max(38,h*.17),rail=s*.28,n=Math.max(5,Math.min(10,Math.round((floor-top)/(s*.41)))),H=floor-top,gap=H/(n+.4),ringY=top+s*.12;
+let dogX=w-s*.85,dogY=floor-s*.39,phase="idle",yaw=-.25,walk=0,ladderVisible=false,ladder={x:w+s,y:floor,angle:pi*.44},ropeY=ringY*ease((t-1.15)/1.1),ropeX=x,pull=0,handTargets=null,footTargets=null;
 const carryStart=2.8,carryEnd=6.5,placeEnd=8.25,approachEnd=9.15,climbEnd=13.05,hangEnd=14.05;
 if(t>=1&&t<carryStart){let u=ease((t-1)/1.8);phase="walk";dogX=mix(w-s*.85,w+s*1.75,u);yaw=mix(-.25,pi*.5,ease((t-1)/.35));walk=(t-1)*1.65}
 if(t>=carryStart&&t<carryEnd){let u=ease((t-carryStart)/(carryEnd-carryStart));phase="carry";dogX=mix(w+H*.63+s*1.75,x+s*.53,u);yaw=-pi*.40;walk=(t-carryStart)*1.25;ladderVisible=true;ladder.angle=pi*.44+Math.sin(walk*2*pi)*.012;ladder.x=dogX-H*.48;ladder.y=dogY+s*.02+Math.cos(ladder.angle)*H*.48; /* midpoint of rail under arm */ ladder.x=dogX-Math.sin(ladder.angle)*H*.48;handTargets=[[dogX-s*.13,dogY-s*.06,s*.12],null]}
@@ -49,6 +49,6 @@ if(t>=placeEnd){ladderVisible=true;ladder={x,y:floor,angle:0}}
 if(t>=placeEnd&&t<approachEnd){let u=ease((t-placeEnd)/(approachEnd-placeEnd));phase="walk";dogX=mix(x+s*.53,x,u);yaw=mix(-.4,pi,u);walk=(t-placeEnd)*1.5}
 if(t>=approachEnd&&t<climbEnd){phase="climb";yaw=pi;dogX=x;let p=clamp((t-approachEnd)/(climbEnd-approachEnd))*n,k=Math.floor(p),f=p-k,step=k+ease(f);dogY=mix(floor-s*.39,ringY+s*.86,step/n);const snap=(yy)=>floor-gap*(Math.max(0,Math.min(n-1,Math.round((floor-yy)/gap-.75)))+.75);handTargets=[0,1].map(i=>[x+(i? -1:1)*rail,snap(dogY-s*.54)-Math.sin(pi*f)*gap*.5*((k+i)%2),-s*.03]);footTargets=[0,1].map(i=>[x+(i?-1:1)*rail*.58,snap(dogY+s*.28)-Math.sin(pi*f)*gap*.45*((k+i+1)%2),-s*.03])}
 if(t>=climbEnd){let u=ease((t-climbEnd)/(hangEnd-climbEnd));phase="hang";yaw=mix(pi,0,u);dogX=x;dogY=ringY+s*.86+s*.05*u;handTargets=[0,1].map(i=>[mix(x+(i?-1:1)*rail,x+(i?1:-1)*s*.065,u),mix(top+gap*.3,ringY,u),0]);if(t>=hangEnd){let p=ease((t-hangEnd)/(duration-hangEnd));pull=h*p;ropeY=ringY+pull;ropeX=x+Math.sin(p*2*pi)*s*.07*(1-p);dogX=ropeX;dogY=ropeY+s*.91;handTargets=[[ropeX-s*.065,ropeY,0],[ropeX+s*.065,ropeY,0]];yaw=Math.sin(p*2*pi)*.12}}
-return {w,h,t,s,floor,x,top,rail,n,gap,ringY,ropeY,ropeX,pull,dogX,dogY,phase,walk,ladderVisible,ladder,yaw,handTargets,footTargets}}
+let drawS=s,cameraX=w/2,cameraY=h/2,shadowAlpha=1;if(start&&t<carryStart){const u=ease(Math.max(0,t-.25)/2.55),turn=ease(Math.max(0,t-.35)/.85);drawS=mix(start.s,s,u);dogX=mix(start.x,dogX,u);dogY=mix(start.y,dogY,u);cameraX=mix(start.cx,w/2,u);cameraY=mix(start.cy,h/2,u);yaw=mix(start.yaw,yaw,turn);shadowAlpha=u;}return {w,h,t:t+(start?.clock||0),s:drawS,floor,x,top,rail,n,gap,ringY,ropeY,ropeX,pull,dogX,dogY,phase,walk,ladderVisible,ladder,yaw,handTargets,footTargets,cameraX,cameraY,shadowAlpha}}
 window.Cookie3D={render,pose,duration};
 })();
