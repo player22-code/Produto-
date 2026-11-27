@@ -137,4 +137,56 @@ function paint(now){const w=canvas.width,h=canvas.height,t=reduced.matches?.8:no
 function frame(now){raf=0;if(document.hidden||document.body.classList.contains('finale-playing')){raf=requestAnimationFrame(frame);return}if(now-last>=1000/30-1){last=now;paint(now)}if(!reduced.matches)raf=requestAnimationFrame(frame)}
 function start(){if(raf)cancelAnimationFrame(raf);raf=0;paint(performance.now());if(!reduced.matches&&!document.hidden)raf=requestAnimationFrame(frame)}
 document.addEventListener('visibilitychange',start);reduced.addEventListener?.('change',start);start()})();
-</script><style id="cookie-shared-character">#petDog,#petDock.talking #petDog{animation:none!important;will-change:auto;display:block;object-fit:contain}</style></body></html>
+</script><style id="cookie-shared-character">#petDog,#petDock.talking #petDog{animation:none!important;will-change:auto;display:block;object-fit:contain}</style><style id="nh-cinematic-site">
+#nh-cinema-frame{position:fixed;inset:0;width:100%;height:100%;border:0;pointer-events:none;z-index:0;opacity:0;transition:opacity .5s ease;background:#10091b}
+#nh-cinema-hit{position:fixed;z-index:19;display:none;background:transparent;border:0;border-radius:22px;padding:0;cursor:pointer;box-shadow:none}
+#nh-cinema-hit:focus-visible{outline:2px solid #d9b9ff}
+body.nh-cinematic{background:#10091b!important;color:#fff;isolation:isolate}
+body.nh-cinematic #nh-cinema-frame{opacity:1}
+body.nh-cinematic>main{position:relative;z-index:1;background:transparent!important;max-width:none!important}
+body.nh-cinematic>header{z-index:25;background:#110b1ddd!important;color:white!important;backdrop-filter:blur(12px)}
+body.nh-cinematic>header .brand,body.nh-cinematic>header .presentationLabel{color:#fff!important}
+body.nh-cinematic #presentation,body.nh-cinematic #allSlides{background:transparent!important}
+body.nh-cinematic #allSlides .scroll-slide:nth-child(n){background:transparent!important;--ink:#fff;--bg:#110b1d;--next:transparent;color:#fff!important;min-height:100svh;padding:clamp(50px,8vh,100px) 7vw!important}
+body.nh-cinematic #allSlides .scroll-slide:nth-child(n)::after{display:none!important;animation:none!important}
+body.nh-cinematic #allSlides .scroll-slide .real-art{display:none!important}
+body.nh-cinematic #allSlides .scroll-slide:nth-child(n)>h2,body.nh-cinematic #allSlides .scroll-slide:nth-child(n)>.eyebrow,body.nh-cinematic #allSlides .scroll-slide:nth-child(n)>.content{width:min(46vw,740px);max-width:100%;margin-left:0!important;margin-right:auto!important;color:inherit;text-shadow:0 2px 15px #0008}
+body.nh-cinematic #allSlides .scroll-slide h2{font-size:clamp(32px,5vw,72px);letter-spacing:-.055em;line-height:1.04}
+body.nh-cinematic #allSlides .scroll-slide>.eyebrow{color:#ecd0ff!important;letter-spacing:.14em;text-transform:uppercase}
+body.nh-cinematic #allSlides .scroll-slide .tile,body.nh-cinematic #allSlides .scroll-slide .formula,body.nh-cinematic #allSlides .scroll-slide table{background:#1c142bba!important;color:#fff!important;border-color:#ffffff30!important}
+body.nh-cinematic #allSlides .scroll-slide td,body.nh-cinematic #allSlides .scroll-slide th{color:#fff!important;border-color:#ffffff26!important}
+body.nh-cinematic #allSlides .scroll-slide .content{overflow-wrap:anywhere}
+body.nh-cinematic #allSlides .scroll-slide:has(table)>.content{width:min(50vw,820px);overflow-x:auto}
+body.nh-cinematic #allSlides .scroll-slide:has(.neonChart)>.content{width:min(52vw,840px);background:#110b1d70;border-radius:20px;padding:14px}
+body.nh-cinematic #allSlides .scroll-slide .content .graphSide{max-width:100%;min-width:0}
+body.nh-cinematic #allSlides .scroll-slide .content .neonChart{max-width:100%;min-width:0}
+body.nh-cinematic #allSlides .scroll-slide button:not(.correct):not(.wrong){color:white}
+#nh-cinema-code-button{display:none;background:#ffffff17;border:1px solid #ffffff50;color:#fff;margin-top:18px;border-radius:999px;padding:12px 20px}
+body.nh-cinematic #nh-cinema-code-button{display:inline-flex}
+body.nh-cinema-zoom{overflow:hidden!important}
+body.nh-cinema-zoom #nh-cinema-frame{z-index:2147483000;pointer-events:auto}
+body.nh-cinema-zoom #nh-cinema-hit{display:none!important}
+@media(max-width:760px){body.nh-cinematic #allSlides .scroll-slide:nth-child(n){padding:49svh 6vw 8vh!important;min-height:100svh;justify-content:flex-start;background:linear-gradient(transparent 32svh,#10091bd9 49svh,#10091bf2 100%)!important}body.nh-cinematic #allSlides .scroll-slide:nth-child(n)>h2,body.nh-cinematic #allSlides .scroll-slide:nth-child(n)>.eyebrow,body.nh-cinematic #allSlides .scroll-slide:nth-child(n)>.content{width:100%;max-width:100%;margin-inline:0!important}body.nh-cinematic #allSlides .scroll-slide h2{font-size:clamp(30px,8vw,48px)}body.nh-cinematic #allSlides .scroll-slide .content{font-size:14px}body.nh-cinematic #allSlides .scroll-slide table{min-width:340px}}
+@media(prefers-reduced-motion:reduce){#nh-cinema-frame{transition:none}}
+</style>
+<script id="nh-cinematic-integration">
+(()=>{const f=document.createElement('iframe');f.id='nh-cinema-frame';f.title='Cenário 3D cinematográfico interativo';f.src='cinema-3d.html?embed=1&v=20261127';f.tabIndex=-1;const hit=document.createElement('button');hit.id='nh-cinema-hit';hit.type='button';hit.setAttribute('aria-label','Ampliar celular 3D e visualizar código');document.body.prepend(f);document.body.append(hit);
+const groups=[0,0,0,1,2,2,2,3,3,3,4,4,4];let ready=false,raf=0,last=0,previousFocus=null;
+const api=()=>{try{return f.contentWindow?.nhCinema}catch{return null}};
+function sourceSlides(){return [...document.querySelectorAll('#allSlides .scroll-slide')]}
+function open(){const a=api();if(!a)return;previousFocus=document.activeElement;if(a.open()){f.focus({preventScroll:true})}}
+hit.addEventListener('click',open);const s3=document.getElementById('slide-3')?.querySelector('.content');if(s3){const b=document.createElement('button');b.id='nh-cinema-code-button';b.type='button';b.textContent='Ver código no celular 3D ↗';b.addEventListener('click',open);s3.append(b)}
+function enable(){if(ready||!api())return;ready=true;document.body.classList.add('nh-cinematic');requestAnimationFrame(tick)}
+window.addEventListener('nhCinemaReady',enable);f.addEventListener('load',enable);
+window.addEventListener('nhCinemaOpen',()=>{document.body.classList.add('nh-cinema-zoom');hit.style.display='none';f.tabIndex=0;f.focus({preventScroll:true})});
+window.addEventListener('nhCinemaClose',()=>{document.body.classList.remove('nh-cinema-zoom');f.tabIndex=-1;if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});previousFocus=null});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&api()?.zoomed)api().close()});
+window.addEventListener('pointermove',e=>{if(ready&&!api()?.zoomed)api()?.pointer(e.clientX/Math.max(1,innerWidth),e.clientY/Math.max(1,innerHeight))},{passive:true});
+function tick(t){raf=requestAnimationFrame(tick);if(document.hidden||t-last<32)return;last=t;const a=api();if(!a)return;const ss=sourceSlides();if(!ss.length)return;
+const y=innerHeight*.5;let ix=ss.findIndex(el=>el.getBoundingClientRect().bottom>y);if(ix<0)ix=ss.length-1;
+let v=groups[ix]??4;const blend=Math.max(90,innerHeight*.22);const cur=ss[ix].getBoundingClientRect(),before=groups[ix-1],after=groups[ix+1];
+if(ix>0&&before!==v&&cur.top>y-blend){let u=Math.max(0,Math.min(1,(y-cur.top+blend)/(2*blend)));v=before+(v-before)*u}
+else if(ix<ss.length-1&&after!==v&&cur.bottom<y+blend){let u=Math.max(0,Math.min(1,(y-cur.bottom+blend)/(2*blend)));v=v+(after-v)*u}
+a.setScene(v,Number(document.getElementById('qty')?.value||0));const b=ix===3&&!a.zoomed?a.bounds():null;if(b&&b.w>12&&b.h>12){Object.assign(hit.style,{display:'block',left:Math.max(0,b.x)+'px',top:Math.max(0,b.y)+'px',width:Math.min(b.w,innerWidth-Math.max(0,b.x))+'px',height:Math.min(b.h,innerHeight-Math.max(0,b.y))+'px'});}else hit.style.display='none'}
+})();
+</script></body></html>
