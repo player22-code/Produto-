@@ -3,7 +3,7 @@
 const pi=Math.PI,clamp=x=>Math.max(0,Math.min(1,x)),mix=(a,b,t)=>a+(b-a)*t,ease=x=>{x=clamp(x);return x*x*(3-2*x)},v=(x=0,y=0,z=0)=>[x,y,z],add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,k)=>a.map(x=>x*k),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1)),rot=(p,a)=>[Math.cos(a)*p[0]+Math.sin(a)*p[2],p[1],-Math.sin(a)*p[0]+Math.cos(a)*p[2]];
 function mesh(n=16,m=10){let p=[],f=[];for(let j=0;j<=m;j++)for(let i=0;i<=n;i++){let b=pi*j/m,a=2*pi*i/n;p.push([Math.sin(b)*Math.cos(a),Math.cos(b),Math.sin(b)*Math.sin(a)])}for(let j=0;j<m;j++)for(let i=0;i<n;i++){let a=j*(n+1)+i,b=a+1,c=a+n+1,d=c+1;f.push([a,b,c],[b,d,c])}return{p,f}}
 const sphere=mesh(24,16),small=mesh(12,8),tiny=mesh(8,5);
-const colors={fur:[.82,.48,.25],ear:[.39,.18,.12],cream:[1,.88,.69],dark:[.055,.033,.075],nose:[.10,.055,.09],pink:[.87,.24,.45],collar:[.39,.13,.74],gold:[.95,.65,.22],metal:[.49,.43,.67],rubber:[.13,.10,.20],white:[1,.96,.92]};
+const colors={fur:[.94,.65,.35],ear:[.48,.23,.10],cream:[1,.95,.82],dark:[.055,.033,.075],nose:[.10,.055,.09],pink:[.87,.24,.45],collar:[.39,.13,.74],gold:[.95,.65,.22],metal:[.49,.43,.67],rubber:[.13,.10,.20],white:[1,.96,.92]};
 function render(ctx,a,opt={}){
 const {w,h,s,dogX,dogY,t}=a,assistant=!!opt.assistant,phase=a.phase||"idle",talking=!!opt.talking;
 const polys=[],cam=9;let origin=[dogX,dogY,0],yaw=assistant?Math.sin(t*.65)*.16:(a.yaw||0);const cyaw=Math.cos(yaw),syaw=Math.sin(yaw),cx=a.cameraX??w/2,cy=a.cameraY??h/2;
@@ -25,16 +25,16 @@ if(a.handTargets)for(let i=0;i<2;i++)if(a.handTargets[i])hands[i]=local(a.handTa
 if(a.footTargets)for(let i=0;i<2;i++)if(a.footTargets[i])feet[i]=local(a.footTargets[i]);
 const tailW=Math.sin(t*5)*.19;
 limb([.12,.07,-.23],[.28+tailW,.02,-.43],"fur",.085);ball([.29+tailW,-.07,-.45],[.087,.16,.09],"fur",-.25,false);
-ball([0,-.02,0],[.32,.35+breathe,.255],"fur");ball([0,.015,.19],[.218,.245,.105],"cream");
+ball([0,-.02,0],[.30,.33+breathe,.26],"fur");ball([0,.015,.19],[.218,.238,.115],"cream");
 for(let i=0;i<2;i++){let sign=i?1:-1;const hip=[sign*.15,.17,0],shoulder=[sign*.24,-.18,.015];const knee=mixPoint(hip,feet[i],.52,[0,.005,.035]);const elbow=mixPoint(shoulder,hands[i],.53,[sign*.035,.035,.035]);limb(hip,knee,"fur",.105);limb(knee,feet[i],"fur",.085);ball(feet[i],[.123,.083,.148],"cream",0,false);limb(shoulder,elbow,"fur",.09);limb(elbow,hands[i],"fur",.075);ball(hands[i],[.091,.091,.09],"cream",0,false)}
 let headY=-.50+breathe,tilt=Math.sin(t*2.1)*.027+(moving?gait*.035*stride:0);
-ball([0,headY,0],[.415,.375,.32],"fur",tilt);for(const sign of [-1,1]){let earAng=sign*(.25+Math.sin(t*2.7)*.045+(moving?gait*.055*stride:0));ball([sign*.345,headY+.035,-.025],[.168,.315,.15],"ear",earAng);ball([sign*.36,headY+.08,.065],[.087,.207,.049],[.76,.44,.37],earAng,false)}
-ball([0,headY+.115,.254],[.245,.168,.132],"cream");for(const sign of [-1,1]){ball([sign*.088,headY+.11,.32],[.109,.085,.062],"cream",0,false);ball([sign*.145,headY-.155,.265],[.075,.023,.025],[.62,.35,.22],sign*.12,false)}
+ball([0,headY,0],[.47,.405,.36],"fur",tilt);for(const sign of [-1,1]){let earAng=sign*(.25+Math.sin(t*2.7)*.045+(moving?gait*.055*stride:0));ball([sign*.40,headY+.045,-.035],[.165,.34,.15],"ear",earAng);ball([sign*.425,headY+.09,.065],[.091,.23,.05],[.76,.44,.37],earAng,false)}
+ball([0,headY+.13,.29],[.279,.17,.145],"cream");for(const sign of [-1,1]){ball([sign*.105,headY+.12,.375],[.122,.087,.064],"cream",0,false);ball([sign*.165,headY-.186,.30],[.088,.026,.027],[.62,.35,.22],sign*.12,false)}
 let blink=Math.max(.09,Math.min(1,Math.abs((t%4.8)-4.55)*9));
-for(const sign of [-1,1]){ball([sign*.143,headY-.055,.28],[.100,.112*blink,.056],"cream",0,false);ball([sign*.143,headY-.055,.307],[.080,.093*blink,.047],[.37,.20,.10],0,false);ball([sign*.143,headY-.055,.331],[.060,.076*blink,.031],"dark",0,false);if(blink>.3){ball([sign*.143-.025,headY-.085,.359],[.024,.025,.012],"white",0,false);ball([sign*.143+.025,headY-.019,.356],[.012,.013,.008],[.78,.64,.94],0,false)}}
-ball([0,headY+.075,.368],[.089,.057,.048],"nose",0,false);ball([-.025,headY+.058,.403],[.025,.010,.007],[.68,.56,.72],0,false);
-ball([0,headY+.198,.338],[.068,talking?.023+.027*Math.abs(Math.sin(t*15)):.023,.018],"dark",0,false);if(talking)ball([0,headY+.208,.354],[.043,.014,.012],"pink",0,false);
-ball([0,-.285,0],[.25,.052,.22],"collar");ball([0,-.25,.238],[.063,.067,.026],"gold",0,false);ball([0,-.25,.260],[.037,.041,.009],[.65,.34,.12],0,false);
+for(const sign of [-1,1]){ball([sign*.165,headY-.055,.33],[.123,.139*blink,.070],"cream",0,false);ball([sign*.165,headY-.055,.375],[.096,.113*blink,.052],[.37,.20,.10],0,false);ball([sign*.165,headY-.055,.407],[.074,.093*blink,.039],"dark",0,false);if(blink>.3){ball([sign*.165-.027,headY-.095,.443],[.030,.031,.014],"white",0,false);ball([sign*.165+.031,headY-.013,.441],[.014,.015,.008],[.78,.64,.94],0,false)}}
+ball([0,headY+.085,.43],[.104,.064,.054],"nose",0,false);ball([-.03,headY+.062,.478],[.025,.010,.007],[.68,.56,.72],0,false);
+ball([0,headY+.216,.388],[.085,talking?.026+.035*Math.abs(Math.sin(t*15)):.031,.025],"dark",0,false);if(talking)ball([0,headY+.227,.408],[.050,.019,.014],"pink",0,false);
+ball([0,-.285,0],[.255,.067,.24],"collar");ball([0,-.25,.238],[.075,.077,.033],"gold",0,false);ball([0,-.25,.260],[.037,.041,.009],[.65,.34,.12],0,false);
 polys.sort((a,b)=>a.z-b.z);for(const p of polys){ctx.beginPath();ctx.moveTo(p.A[0],p.A[1]);ctx.lineTo(p.B[0],p.B[1]);ctx.lineTo(p.C[0],p.C[1]);ctx.closePath();ctx.fillStyle=ctx.strokeStyle=p.c;ctx.lineWidth=.32;ctx.fill();ctx.stroke()}
 }
 function mixPoint(a,b,t,d=[0,0,0]){return a.map((x,i)=>mix(x,b[i],t)+d[i])}
@@ -50,5 +50,5 @@ if(t>=placeEnd&&t<approachEnd){let u=ease((t-placeEnd)/(approachEnd-placeEnd));p
 if(t>=approachEnd&&t<climbEnd){phase="climb";yaw=pi;dogX=x;let p=clamp((t-approachEnd)/(climbEnd-approachEnd))*n,k=Math.floor(p),f=p-k,step=k+ease(f);dogY=mix(floor-s*.403,ringY+s*.86,step/n);const rung=j=>floor-gap*(Math.max(0,Math.min(n-1,j))+.75);const stepLimb=(i,offset)=>{const q=p*.5+i*.5+offset,j=Math.floor(q),f=q-j;return mix(rung(j*2),rung((j+1)*2),ease(clamp((f-.35)/.65)))};const grip=ease((t-approachEnd)/.35);handTargets=[0,1].map(i=>{const sign=i?-1:1;return [mix(x+sign*s*.37,x+sign*rail,grip),mix(dogY-s*.08,stepLimb(i,1.1),grip),-s*.11]});footTargets=[0,1].map(i=>{const sign=i?-1:1;return [mix(x+sign*s*.18,x+sign*rail*.58,grip),mix(dogY+s*.32,stepLimb(i,0),grip),-s*.12]})}
 if(t>=climbEnd){let u=ease((t-climbEnd)/(hangEnd-climbEnd));phase="hang";yaw=mix(pi,0,u);dogX=x;dogY=ringY+s*.86+s*.05*u;handTargets=[0,1].map(i=>[mix(x+(i?-1:1)*rail,x+(i?1:-1)*s*.065,u),mix(top+gap*.3,ringY,u),0]);if(t>=hangEnd){let p=ease((t-hangEnd)/(duration-hangEnd));pull=h*p;ropeY=ringY+pull;ropeX=x+Math.sin(p*2*pi)*s*.07*(1-p);dogX=ropeX;dogY=ropeY+s*.91;handTargets=[[ropeX-s*.065,ropeY,0],[ropeX+s*.065,ropeY,0]];yaw=Math.sin(p*2*pi)*.12}}
 let drawS=s,cameraX=w/2,cameraY=h/2,shadowAlpha=1;if(start&&t<carryStart){const u=ease(Math.max(0,t-.25)/2.55),turn=ease(Math.max(0,t-.35)/.85);drawS=mix(start.s,s,u);dogX=mix(start.x,dogX,u);dogY=mix(start.y,dogY,u);cameraX=mix(start.cx,w/2,u);cameraY=mix(start.cy,h/2,u);yaw=mix(start.yaw,yaw,turn);shadowAlpha=u;}return {w,h,t:t+(start?.clock||0),s:drawS,floor,x,top,rail,n,gap,ringY,ropeY,ropeX,pull,dogX,dogY,phase,walk,stride,ladderVisible,ladder,yaw,handTargets,footTargets,cameraX,cameraY,shadowAlpha}}
-window.Cookie3D={render,pose,duration};
+window.Cookie3D={render,pose,duration,version:'cinema-gold-6'};
 })();
