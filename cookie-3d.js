@@ -2,16 +2,16 @@
 (()=>{"use strict";
 const pi=Math.PI,clamp=x=>Math.max(0,Math.min(1,x)),mix=(a,b,t)=>a+(b-a)*t,ease=x=>{x=clamp(x);return x*x*(3-2*x)},v=(x=0,y=0,z=0)=>[x,y,z],add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,k)=>a.map(x=>x*k),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1)),rot=(p,a)=>[Math.cos(a)*p[0]+Math.sin(a)*p[2],p[1],-Math.sin(a)*p[0]+Math.cos(a)*p[2]];
 function mesh(n=16,m=10){let p=[],f=[];for(let j=0;j<=m;j++)for(let i=0;i<=n;i++){let b=pi*j/m,a=2*pi*i/n;p.push([Math.sin(b)*Math.cos(a),Math.cos(b),Math.sin(b)*Math.sin(a)])}for(let j=0;j<m;j++)for(let i=0;i<n;i++){let a=j*(n+1)+i,b=a+1,c=a+n+1,d=c+1;f.push([a,b,c],[b,d,c])}return{p,f}}
-const sphere=mesh(20,12),small=mesh(12,8);
-const colors={fur:[.79,.52,.31],ear:[.48,.23,.16],cream:[1,.85,.65],dark:[.055,.033,.075],nose:[.10,.055,.09],pink:[.87,.24,.45],collar:[.39,.13,.74],gold:[.95,.65,.22],metal:[.49,.43,.67],rubber:[.13,.10,.20],white:[1,.96,.92]};
+const sphere=mesh(24,15),small=mesh(12,8),tiny=mesh(8,5);
+const colors={fur:[.86,.57,.34],ear:[.49,.25,.19],cream:[1,.91,.76],dark:[.055,.033,.075],nose:[.10,.055,.09],pink:[.87,.24,.45],collar:[.39,.13,.74],gold:[.95,.65,.22],metal:[.49,.43,.67],rubber:[.13,.10,.20],white:[1,.96,.92]};
 function render(ctx,a,opt={}){
 const {w,h,s,dogX,dogY,t}=a,assistant=!!opt.assistant,phase=a.phase||"idle",talking=!!opt.talking;
-const polys=[],cam=9;let origin=[dogX,dogY,0],yaw=assistant?Math.sin(t*.65)*.16:(a.yaw||0);
-function project(p){const q=cam/(cam-p[2]/s);const cx=a.cameraX??w/2,cy=a.cameraY??h/2;return [cx+(p[0]-cx)*q,cy+(p[1]-cy)*q,p[2]]}
-function part(center,scale,color,angle=0,axis=null,world=false,detail=true){const obj=detail?sphere:small,basis=axis?(()=>{let y=norm(axis),x=norm(cross(Math.abs(y[2])>.9?[1,0,0]:[0,0,1],y)),z=norm(cross(x,y));return[x,y,z]})():null;
-const transform=(p,normal=false)=>{let q=p.map((x,i)=>x*(normal?1/scale[i]:scale[i]));if(basis)q=add(add(mul(basis[0],q[0]),mul(basis[1],q[1])),mul(basis[2],q[2]));else if(angle)q=[q[0]*Math.cos(angle)-q[1]*Math.sin(angle),q[0]*Math.sin(angle)+q[1]*Math.cos(angle),q[2]];if(!normal)q=add(q,center);if(!world)q=rot(q,yaw);return normal?norm(q):world?q:add(origin,mul(q,s))};
+const polys=[],cam=9;let origin=[dogX,dogY,0],yaw=assistant?Math.sin(t*.65)*.16:(a.yaw||0);const cyaw=Math.cos(yaw),syaw=Math.sin(yaw),cx=a.cameraX??w/2,cy=a.cameraY??h/2;
+function project(p){const q=cam/(cam-p[2]/s);return [cx+(p[0]-cx)*q,cy+(p[1]-cy)*q,p[2]]}
+function part(center,scale,color,angle=0,axis=null,world=false,detail=true){const obj=world?tiny:detail?sphere:small,basis=axis?(()=>{let y=norm(axis),x=norm(cross(Math.abs(y[2])>.9?[1,0,0]:[0,0,1],y)),z=norm(cross(x,y));return[x,y,z]})():null;
+const ca=Math.cos(angle),sa=Math.sin(angle),sx=scale[0],sy=scale[1],sz=scale[2];function transform(p,normal=false){let x=p[0]*(normal?1/sx:sx),y=p[1]*(normal?1/sy:sy),z=p[2]*(normal?1/sz:sz);if(basis){const X=basis[0],Y=basis[1],Z=basis[2];const qx=X[0]*x+Y[0]*y+Z[0]*z,qy=X[1]*x+Y[1]*y+Z[1]*z;z=X[2]*x+Y[2]*y+Z[2]*z;x=qx;y=qy}else if(angle){const qx=x*ca-y*sa;y=x*sa+y*ca;x=qx}if(!normal){x+=center[0];y+=center[1];z+=center[2]}if(!world){const qx=cyaw*x+syaw*z;z=-syaw*x+cyaw*z;x=qx}if(normal){const inv=1/(Math.sqrt(x*x+y*y+z*z)||1);return[x*inv,y*inv,z*inv]}return world?[x,y,z]:[dogX+x*s,dogY+y*s,z*s]}
 const pp=obj.p.map(p=>project(transform(p))),nn=obj.p.map(p=>transform(p,true));
-for(const f of obj.f){const A=pp[f[0]],B=pp[f[1]],C=pp[f[2]];if(Math.abs((B[0]-A[0])*(C[1]-A[1])-(B[1]-A[1])*(C[0]-A[0]))<=.03)continue;let n=norm(add(add(nn[f[0]],nn[f[1]]),nn[f[2]]));if(n[2]<.02)continue;const light=Math.max(0,dot(n,[-.45,-.65,.61])),rim=Math.pow(1-Math.max(0,n[2]),2),spec=Math.pow(Math.max(0,dot(n,[-.25,-.37,.895])),22);const rgb=color.map((c,i)=>Math.round(255*Math.min(1,Math.pow(c*(.32+.72*light)+rim*[.23,.10,.35][i]+spec*.38,.83))));polys.push({A,B,C,z:(A[2]+B[2]+C[2])/3,c:"rgb("+rgb.join(",")+")"})}}
+for(const f of obj.f){const A=pp[f[0]],B=pp[f[1]],C=pp[f[2]];if(Math.abs((B[0]-A[0])*(C[1]-A[1])-(B[1]-A[1])*(C[0]-A[0]))<=.03)continue;const na=nn[f[0]],nb=nn[f[1]],nc=nn[f[2]];let nx=na[0]+nb[0]+nc[0],ny=na[1]+nb[1]+nc[1],nz=na[2]+nb[2]+nc[2];if(nz<.02)continue;const inv=1/(Math.sqrt(nx*nx+ny*ny+nz*nz)||1);nx*=inv;ny*=inv;nz*=inv;const light=Math.max(0,-.45*nx-.65*ny+.61*nz),rim=(1-nz)**2,spec=Math.max(0,-.25*nx-.37*ny+.895*nz)**24;const base=.39+.65*light+.09*Math.max(0,.8*nx+.6*ny),gloss=(color===colors.dark||color===colors.nose||color===colors.gold)?.48:.15;const tone=(c,r)=>Math.round(255*Math.min(1,Math.pow(c*base+rim*r+spec*gloss,.86)));polys.push({A,B,C,z:(A[2]+B[2]+C[2])/3,c:'rgb('+tone(color[0],.13)+','+tone(color[1],.065)+','+tone(color[2],.19)+')'})}}
 function ball(p,sc,c,ang=0,d=true){part(p,sc,colors[c]||c,ang,null,false,d)}
 function limb(a,b,c,r=.09,world=false){let d=sub(b,a),l=Math.hypot(...d);if(l<.001)return;part(mul(add(a,b),.5),[r,l*.58,r],colors[c]||c,0,d,world,false)}
 const local=p=>mul(rot(mul(sub(p,origin),1/s),-yaw),1);const world=p=>add(origin,mul(rot(p,yaw),s));
@@ -25,17 +25,17 @@ if(a.handTargets)for(let i=0;i<2;i++)if(a.handTargets[i])hands[i]=local(a.handTa
 if(a.footTargets)for(let i=0;i<2;i++)if(a.footTargets[i])feet[i]=local(a.footTargets[i]);
 const tailW=Math.sin(t*5)*.19;
 limb([.12,.07,-.23],[.28+tailW,.02,-.43],"fur",.085);ball([.29+tailW,-.07,-.45],[.087,.16,.09],"fur",-.25,false);
-ball([0,-.02,0],[.31,.35+breathe,.25],"fur");ball([0,.015,.19],[.205,.23,.10],"cream");
-for(let i=0;i<2;i++){let sign=i?1:-1;const hip=[sign*.15,.17,0],shoulder=[sign*.24,-.18,.015];const knee=mixPoint(hip,feet[i],.52,[0,.005,.035]);const elbow=mixPoint(shoulder,hands[i],.53,[sign*.035,.035,.035]);limb(hip,knee,"fur",.105);limb(knee,feet[i],"fur",.085);ball(feet[i],[.112,.075,.14],"cream",0,false);limb(shoulder,elbow,"fur",.09);limb(elbow,hands[i],"fur",.075);ball(hands[i],[.091,.091,.09],"cream",0,false)}
+ball([0,-.02,0],[.32,.35+breathe,.255],"fur");ball([0,.015,.19],[.218,.245,.105],"cream");
+for(let i=0;i<2;i++){let sign=i?1:-1;const hip=[sign*.15,.17,0],shoulder=[sign*.24,-.18,.015];const knee=mixPoint(hip,feet[i],.52,[0,.005,.035]);const elbow=mixPoint(shoulder,hands[i],.53,[sign*.035,.035,.035]);limb(hip,knee,"fur",.105);limb(knee,feet[i],"fur",.085);ball(feet[i],[.123,.083,.148],"cream",0,false);limb(shoulder,elbow,"fur",.09);limb(elbow,hands[i],"fur",.075);ball(hands[i],[.091,.091,.09],"cream",0,false)}
 let headY=-.49+breathe,tilt=Math.sin(t*2.1)*.025+(moving?gait*.035:0);
-ball([0,headY,0],[.39,.355,.30],"fur",tilt);for(const sign of [-1,1]){let earAng=sign*(.22+Math.sin(t*2.7)*.045);ball([sign*.345,headY+.035,-.025],[.145,.29,.13],"ear",earAng);ball([sign*.36,headY+.08,.065],[.075,.19,.04],[.67,.35,.30],earAng,false)}
-ball([0,headY+.12,.245],[.245,.17,.13],"cream");
+ball([0,headY,0],[.405,.36,.31],"fur",tilt);for(const sign of [-1,1]){let earAng=sign*(.22+Math.sin(t*2.7)*.045);ball([sign*.345,headY+.035,-.025],[.155,.295,.145],"ear",earAng);ball([sign*.36,headY+.08,.065],[.087,.207,.049],[.76,.44,.37],earAng,false)}
+ball([0,headY+.115,.254],[.245,.168,.132],"cream");for(const sign of [-1,1]){ball([sign*.088,headY+.11,.32],[.109,.085,.062],"cream",0,false);ball([sign*.145,headY-.155,.265],[.075,.023,.025],[.62,.35,.22],sign*.12,false)}
 let blink=assistant||phase==="idle"?Math.max(.09,Math.min(1,Math.abs((t%4.8)-4.55)*9)):1;
-for(const sign of [-1,1]){ball([sign*.137,headY-.055,.265],[.077,.090*blink,.044],"dark",0,false);if(blink>.3){ball([sign*.137-.022,headY-.081,.302],[.021,.023,.013],"white",0,false);ball([sign*.137+.024,headY-.023,.299],[.011,.012,.008],[.65,.43,1],0,false)}}
-ball([0,headY+.075,.368],[.084,.056,.042],"nose",0,false);ball([-.025,headY+.058,.403],[.025,.010,.007],[.68,.56,.72],0,false);
+for(const sign of [-1,1]){ball([sign*.143,headY-.055,.276],[.086,.099*blink,.051],"dark",0,false);if(blink>.3){ball([sign*.143-.025,headY-.085,.323],[.024,.025,.012],"white",0,false);ball([sign*.143+.025,headY-.019,.321],[.012,.013,.008],[.78,.64,.94],0,false)}}
+ball([0,headY+.075,.368],[.089,.057,.048],"nose",0,false);ball([-.025,headY+.058,.403],[.025,.010,.007],[.68,.56,.72],0,false);
 ball([0,headY+.198,.338],[.068,talking?.023+.027*Math.abs(Math.sin(t*15)):.023,.018],"dark",0,false);if(talking)ball([0,headY+.208,.354],[.043,.014,.012],"pink",0,false);
-ball([0,-.285,0],[.25,.052,.22],"collar");ball([0,-.25,.231],[.055,.065,.024],"gold",0,false);
-polys.sort((a,b)=>a.z-b.z);for(const p of polys){ctx.beginPath();ctx.moveTo(p.A[0],p.A[1]);ctx.lineTo(p.B[0],p.B[1]);ctx.lineTo(p.C[0],p.C[1]);ctx.closePath();ctx.fillStyle=ctx.strokeStyle=p.c;ctx.lineWidth=.48;ctx.fill();ctx.stroke()}
+ball([0,-.285,0],[.25,.052,.22],"collar");ball([0,-.25,.238],[.063,.067,.026],"gold",0,false);ball([0,-.25,.260],[.037,.041,.009],[.65,.34,.12],0,false);
+polys.sort((a,b)=>a.z-b.z);for(const p of polys){ctx.beginPath();ctx.moveTo(p.A[0],p.A[1]);ctx.lineTo(p.B[0],p.B[1]);ctx.lineTo(p.C[0],p.C[1]);ctx.closePath();ctx.fillStyle=ctx.strokeStyle=p.c;ctx.lineWidth=.32;ctx.fill();ctx.stroke()}
 }
 function mixPoint(a,b,t,d=[0,0,0]){return a.map((x,i)=>mix(x,b[i],t)+d[i])}
 const duration=16.8;
