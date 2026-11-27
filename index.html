@@ -134,7 +134,7 @@ if('ResizeObserver'in window)new ResizeObserver(()=>{if(on&&Math.abs(stage.clien
 
 (()=>{const canvas=$('petDog'),dock=$('petDock'),ctx=canvas?.getContext('2d');if(!ctx||!dock)return;const reduced=matchMedia('(prefers-reduced-motion: reduce)');let raf=0,last=-Infinity;
 function paint(now){const w=canvas.width,h=canvas.height,t=reduced.matches?.8:now/1000,talking=dock.classList.contains('talking');ctx.clearRect(0,0,w,h);const s=w*.70,dogX=w*.48,dogY=h*.68+(reduced.matches?0:Math.sin(t*2.2)*h*.012);if(window.Cookie3D)Cookie3D.render(ctx,{w,h,t,s,dogX,dogY,phase:'idle',walk:0},{assistant:true,talking:talking&&!reduced.matches});else drawCookieCharacter(ctx,{t,s,dogX,dogY,phase:'idle',walk:0},{assistant:true,talking:talking&&!reduced.matches})}
-function frame(now){raf=0;if(document.hidden||document.body.classList.contains('finale-playing')||document.body.classList.contains('nh-cinema-zoom')){raf=requestAnimationFrame(frame);return}if(now-last>=1000/(dock.classList.contains('talking')?20:12)-1){last=now;paint(now)}if(!reduced.matches)raf=requestAnimationFrame(frame)}
+function frame(now){raf=0;if(document.hidden||document.body.classList.contains('finale-playing')||document.body.classList.contains('nh-cinema-zoom')){raf=requestAnimationFrame(frame);return}if(now-last>=1000/(dock.classList.contains('talking')?16:8)-1){last=now;paint(now)}if(!reduced.matches)raf=requestAnimationFrame(frame)}
 function start(){if(raf)cancelAnimationFrame(raf);raf=0;paint(performance.now());if(!reduced.matches&&!document.hidden)raf=requestAnimationFrame(frame)}
 document.addEventListener('visibilitychange',start);reduced.addEventListener?.('change',start);start()})();
 </script><style id="cookie-shared-character">#petDog,#petDock.talking #petDog{animation:none!important;will-change:auto;display:block;object-fit:contain}</style><style id="nh-cinematic-site">
@@ -170,7 +170,7 @@ body.nh-cinema-zoom #nh-cinema-hit{display:none!important}
 @media(prefers-reduced-motion:reduce){#nh-cinema-frame{transition:none}}
 </style>
 <script id="nh-cinematic-integration">
-(()=>{const f=document.createElement('iframe');f.id='nh-cinema-frame';f.title='Cenário 3D cinematográfico interativo';f.src='cinema-3d.html?embed=1&v=20261127-flow4';f.tabIndex=-1;const hit=document.createElement('button');hit.id='nh-cinema-hit';hit.type='button';hit.setAttribute('aria-label','Ampliar celular 3D e visualizar código');document.body.prepend(f);document.body.append(hit);
+(()=>{const f=document.createElement('iframe');f.id='nh-cinema-frame';f.title='Cenário 3D cinematográfico interativo';f.src='cinema-3d.html?embed=1&v=20261127-lite1';f.tabIndex=-1;const hit=document.createElement('button');hit.id='nh-cinema-hit';hit.type='button';hit.setAttribute('aria-label','Ampliar celular 3D e visualizar código');document.body.prepend(f);document.body.append(hit);
 const groups=[0,0,0,1,2,2,2,3,3,3,4,4,4];let ready=false,raf=0,last=0,previousFocus=null,layoutDirty=true,metrics=[],lastScene=-1,lastQty=-1,lastHit='';
 const api=()=>{try{return f.contentWindow?.nhCinema}catch{return null}};
 function sourceSlides(){return [...document.querySelectorAll('#allSlides .scroll-slide')]}function measure(){metrics=sourceSlides().map(el=>{const r=el.getBoundingClientRect();return{top:r.top+scrollY,bottom:r.bottom+scrollY}});layoutDirty=false}const invalidate=()=>{layoutDirty=true};addEventListener('resize',invalidate,{passive:true});document.fonts?.ready.then(invalidate);if(window.ResizeObserver){const ro=new ResizeObserver(invalidate);const root=document.getElementById('allSlides');if(root)ro.observe(root);sourceSlides().forEach(el=>ro.observe(el));}
@@ -182,7 +182,7 @@ window.addEventListener('nhCinemaOpen',()=>{document.body.classList.add('nh-cine
 window.addEventListener('nhCinemaClose',()=>{document.body.classList.remove('nh-cinema-zoom');f.tabIndex=-1;if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});previousFocus=null});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&api()?.zoomed)api().close()});
 window.addEventListener('pointermove',e=>{if(ready&&!api()?.zoomed)api()?.pointer(e.clientX/Math.max(1,innerWidth),e.clientY/Math.max(1,innerHeight))},{passive:true});
-function tick(t){raf=requestAnimationFrame(tick);if(t-last<24)return;last=t;const a=api();if(!a)return;const suspend=document.hidden||document.body.classList.contains('finale-playing');a.pause?.(suspend);if(suspend)return;if(layoutDirty)measure();const ss=metrics;if(!ss.length)return;
+function tick(t){raf=requestAnimationFrame(tick);if(t-last<32)return;last=t;const a=api();if(!a)return;const suspend=document.hidden||document.body.classList.contains('finale-playing');a.pause?.(suspend);if(suspend)return;if(layoutDirty)measure();const ss=metrics;if(!ss.length)return;
 const y=scrollY+innerHeight*.5;let ix=ss.findIndex(el=>el.bottom>y);if(ix<0)ix=ss.length-1;
 let v=groups[ix]??4;const blend=Math.max(120,innerHeight*.31);const cur=ss[ix],before=groups[ix-1],after=groups[ix+1];
 if(ix>0&&before!==v&&cur.top>y-blend){let u=Math.max(0,Math.min(1,(y-cur.top+blend)/(2*blend)));v=before+(v-before)*u}
@@ -206,7 +206,7 @@ body.nh-cinematic #finaleCaption{color:#f5ddff!important;text-shadow:0 0 18px #b
 body.nh-cinematic #finaleSkip{background:#2b1a3d!important;color:white!important;border:1px solid #cda7f76b!important}
 body.nh-cinematic #allSlides .scroll-slide .financeDeck{background:#1a1029d9!important;color:#f7eeff!important}
 </style><style id="nh-layout-repair">
-body.nh-cinematic>header{background:#110b1d!important}
+body.nh-cinematic>header{background:#110b1d!important;backdrop-filter:none!important}
 body.nh-cinematic #allSlides #slide-9{justify-content:flex-start;min-height:calc(100svh - 70px);padding:22px 7vw 26px!important;scroll-margin-top:80px}
 body.nh-cinematic #allSlides #slide-9>h2{font-size:clamp(25px,3.5vh,42px);margin:4px 0 8px;line-height:1.08}
 body.nh-cinematic #allSlides #slide-9>.content{padding:0;background:transparent}
